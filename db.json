@@ -1,0 +1,632 @@
+{
+  "teams": [
+    {
+      "id": "t101",
+      "name": "Falcons",
+      "short_code": "FAL",
+      "notes": "",
+      "players": [
+        "p1",
+        "p2",
+        "p3"
+      ]
+    },
+    {
+      "id": "t102",
+      "name": "Wolves",
+      "short_code": "WOL",
+      "notes": "",
+      "players": [
+        "p4",
+        "p5",
+        "p6"
+      ]
+    },
+    {
+      "id": "t103",
+      "name": "Panthers",
+      "short_code": "PAN",
+      "notes": "",
+      "players": [
+        "p7",
+        "p8",
+        "p9"
+      ]
+    },
+    {
+      "id": "t104",
+      "name": "Sharks",
+      "short_code": "SHA",
+      "notes": "",
+      "players": [
+        "p10",
+        "p11",
+        "p12"
+      ]
+    },
+    {
+      "id": "t105",
+      "name": "Titans",
+      "short_code": "TIT",
+      "notes": "",
+      "players": [
+        "p13",
+        "p14",
+        "p15"
+      ]
+    }
+  ],
+  "players": [
+    {
+      "id": "p1",
+      "full_name": "Alex Carter",
+      "team_id": "t101",
+      "desk_number": 1,
+      "rating": 1200,
+      "points": 3,
+      "wins": 3,
+      "draws": 0,
+      "losses": 0
+    },
+    {
+      "id": "p2",
+      "full_name": "Blake Foster",
+      "team_id": "t101",
+      "desk_number": 2,
+      "rating": 1190,
+      "points": 2,
+      "wins": 2,
+      "draws": 0,
+      "losses": 2
+    },
+    {
+      "id": "p3",
+      "full_name": "Charlie Knight",
+      "team_id": "t101",
+      "desk_number": 3,
+      "rating": 1180,
+      "points": 2,
+      "wins": 2,
+      "draws": 0,
+      "losses": 2
+    },
+    {
+      "id": "p4",
+      "full_name": "Dylan Hayes",
+      "team_id": "t102",
+      "desk_number": 1,
+      "rating": 1210,
+      "points": 1.5,
+      "wins": 1,
+      "draws": 1,
+      "losses": 2
+    },
+    {
+      "id": "p5",
+      "full_name": "Evan Brooks",
+      "team_id": "t102",
+      "desk_number": 2,
+      "rating": 1205,
+      "points": 1,
+      "wins": 0,
+      "draws": 2,
+      "losses": 2
+    },
+    {
+      "id": "p6",
+      "full_name": "Finn Matthews",
+      "team_id": "t102",
+      "desk_number": 3,
+      "rating": 1195,
+      "points": 3,
+      "wins": 3,
+      "draws": 0,
+      "losses": 1
+    },
+    {
+      "id": "p7",
+      "full_name": "Gavin Reid",
+      "team_id": "t103",
+      "desk_number": 1,
+      "rating": 1220,
+      "points": 1.5,
+      "wins": 1,
+      "draws": 1,
+      "losses": 2
+    },
+    {
+      "id": "p8",
+      "full_name": "Hunter Lewis",
+      "team_id": "t103",
+      "desk_number": 2,
+      "rating": 1215,
+      "points": 2.5,
+      "wins": 2,
+      "draws": 1,
+      "losses": 1
+    },
+    {
+      "id": "p9",
+      "full_name": "Ian Ross",
+      "team_id": "t103",
+      "desk_number": 3,
+      "rating": 1200,
+      "points": 0.5,
+      "wins": 0,
+      "draws": 1,
+      "losses": 3
+    },
+    {
+      "id": "p10",
+      "full_name": "Jack Cooper",
+      "team_id": "t104",
+      "desk_number": 1,
+      "rating": 1185,
+      "points": 3,
+      "wins": 2,
+      "draws": 2,
+      "losses": 0
+    },
+    {
+      "id": "p11",
+      "full_name": "Kai Turner",
+      "team_id": "t104",
+      "desk_number": 2,
+      "rating": 1190,
+      "points": 2,
+      "wins": 1,
+      "draws": 2,
+      "losses": 1
+    },
+    {
+      "id": "p12",
+      "full_name": "Liam Scott",
+      "team_id": "t104",
+      "desk_number": 3,
+      "rating": 1180,
+      "points": 2,
+      "wins": 2,
+      "draws": 0,
+      "losses": 2
+    },
+    {
+      "id": "p13",
+      "full_name": "Mason Gray",
+      "team_id": "t105",
+      "desk_number": 1,
+      "rating": 1230,
+      "points": 0.5,
+      "wins": 0,
+      "draws": 1,
+      "losses": 3
+    },
+    {
+      "id": "p14",
+      "full_name": "Noah James",
+      "team_id": "t105",
+      "desk_number": 2,
+      "rating": 1220,
+      "points": 2.5,
+      "wins": 1,
+      "draws": 3,
+      "losses": 0
+    },
+    {
+      "id": "p15",
+      "full_name": "Owen Reed",
+      "team_id": "t105",
+      "desk_number": 3,
+      "rating": 1210,
+      "points": 2.5,
+      "wins": 2,
+      "draws": 1,
+      "losses": 1
+    }
+  ],
+  "rounds": [
+    {
+      "id": "19d9",
+      "round_number": 1,
+      "is_completed": false
+    },
+    {
+      "id": "837d",
+      "round_number": 2,
+      "is_completed": false
+    },
+    {
+      "id": "f73e",
+      "round_number": 3,
+      "is_completed": false
+    },
+    {
+      "id": "3e7c",
+      "round_number": 4,
+      "is_completed": false
+    },
+    {
+      "id": "093d",
+      "round_number": 5,
+      "is_completed": false
+    }
+  ],
+  "pairings": [
+    {
+      "id": "6648",
+      "round_id": "19d9",
+      "team_a_id": "t101",
+      "team_b_id": null,
+      "is_bye": true,
+      "team_a_points": 0,
+      "team_b_points": 0
+    },
+    {
+      "id": "bf54",
+      "round_id": "19d9",
+      "team_a_id": "t102",
+      "team_b_id": "t105",
+      "is_bye": false,
+      "team_a_points": 2.5,
+      "team_b_points": 0.5
+    },
+    {
+      "id": "7aa7",
+      "round_id": "19d9",
+      "team_a_id": "t103",
+      "team_b_id": "t104",
+      "is_bye": false,
+      "team_a_points": 0,
+      "team_b_points": 3
+    },
+    {
+      "id": "d911",
+      "round_id": "837d",
+      "team_a_id": "t101",
+      "team_b_id": "t105",
+      "is_bye": false,
+      "team_a_points": 1,
+      "team_b_points": 2
+    },
+    {
+      "id": "c315",
+      "round_id": "837d",
+      "team_a_id": "t104",
+      "team_b_id": null,
+      "is_bye": true,
+      "team_a_points": 0,
+      "team_b_points": 0
+    },
+    {
+      "id": "f956",
+      "round_id": "837d",
+      "team_a_id": "t102",
+      "team_b_id": "t103",
+      "is_bye": false,
+      "team_a_points": 1,
+      "team_b_points": 2
+    },
+    {
+      "id": "760f",
+      "round_id": "f73e",
+      "team_a_id": "t101",
+      "team_b_id": "t104",
+      "is_bye": false,
+      "team_a_points": 1.5,
+      "team_b_points": 1.5
+    },
+    {
+      "id": "b0a1",
+      "round_id": "f73e",
+      "team_a_id": "t105",
+      "team_b_id": "t103",
+      "is_bye": false,
+      "team_a_points": 1.5,
+      "team_b_points": 1.5
+    },
+    {
+      "id": "290e",
+      "round_id": "f73e",
+      "team_a_id": "t102",
+      "team_b_id": null,
+      "is_bye": true,
+      "team_a_points": 0,
+      "team_b_points": 0
+    },
+    {
+      "id": "d714",
+      "round_id": "3e7c",
+      "team_a_id": "t101",
+      "team_b_id": "t103",
+      "is_bye": false,
+      "team_a_points": 2,
+      "team_b_points": 1
+    },
+    {
+      "id": "5e8a",
+      "round_id": "3e7c",
+      "team_a_id": "t104",
+      "team_b_id": "t102",
+      "is_bye": false,
+      "team_a_points": 1,
+      "team_b_points": 2
+    },
+    {
+      "id": "e2c8",
+      "round_id": "3e7c",
+      "team_a_id": "t105",
+      "team_b_id": null,
+      "is_bye": true,
+      "team_a_points": 0,
+      "team_b_points": 0
+    },
+    {
+      "id": "bf2a",
+      "round_id": "093d",
+      "team_a_id": "t101",
+      "team_b_id": "t102",
+      "is_bye": false,
+      "team_a_points": 3,
+      "team_b_points": 0
+    },
+    {
+      "id": "6aa0",
+      "round_id": "093d",
+      "team_a_id": "t103",
+      "team_b_id": null,
+      "is_bye": true,
+      "team_a_points": 0,
+      "team_b_points": 0
+    },
+    {
+      "id": "9e94",
+      "round_id": "093d",
+      "team_a_id": "t104",
+      "team_b_id": "t105",
+      "is_bye": false,
+      "team_a_points": 1.5,
+      "team_b_points": 1.5
+    }
+  ],
+  "board_results": [
+    {
+      "id": "11a1",
+      "pairing_id": "bf54",
+      "desk_number": 1,
+      "player_a_id": "p4",
+      "player_b_id": "p13",
+      "result": "1-0"
+    },
+    {
+      "id": "09bd",
+      "pairing_id": "bf54",
+      "desk_number": 2,
+      "player_a_id": "p5",
+      "player_b_id": "p14",
+      "result": "0.5-0.5"
+    },
+    {
+      "id": "7e20",
+      "pairing_id": "bf54",
+      "desk_number": 3,
+      "player_a_id": "p6",
+      "player_b_id": "p15",
+      "result": "1-0"
+    },
+    {
+      "id": "663f",
+      "pairing_id": "7aa7",
+      "desk_number": 1,
+      "player_a_id": "p7",
+      "player_b_id": "p10",
+      "result": "0-1"
+    },
+    {
+      "id": "2e1c",
+      "pairing_id": "7aa7",
+      "desk_number": 2,
+      "player_a_id": "p8",
+      "player_b_id": "p11",
+      "result": "0-1"
+    },
+    {
+      "id": "d16a",
+      "pairing_id": "7aa7",
+      "desk_number": 3,
+      "player_a_id": "p9",
+      "player_b_id": "p12",
+      "result": "0-1"
+    },
+    {
+      "id": "6d6f",
+      "pairing_id": "d911",
+      "desk_number": 1,
+      "player_a_id": "p1",
+      "player_b_id": "p13",
+      "result": "1-0"
+    },
+    {
+      "id": "eb9d",
+      "pairing_id": "d911",
+      "desk_number": 2,
+      "player_a_id": "p2",
+      "player_b_id": "p14",
+      "result": "0-1"
+    },
+    {
+      "id": "bac6",
+      "pairing_id": "d911",
+      "desk_number": 3,
+      "player_a_id": "p3",
+      "player_b_id": "p15",
+      "result": "0-1"
+    },
+    {
+      "id": "a95b",
+      "pairing_id": "f956",
+      "desk_number": 2,
+      "player_a_id": "p5",
+      "player_b_id": "p8",
+      "result": "0-1"
+    },
+    {
+      "id": "a048",
+      "pairing_id": "f956",
+      "desk_number": 1,
+      "player_a_id": "p4",
+      "player_b_id": "p7",
+      "result": "0-1"
+    },
+    {
+      "id": "8ca1",
+      "pairing_id": "f956",
+      "desk_number": 3,
+      "player_a_id": "p6",
+      "player_b_id": "p9",
+      "result": "1-0"
+    },
+    {
+      "id": "8f68",
+      "pairing_id": "760f",
+      "desk_number": 1,
+      "player_a_id": "p1",
+      "player_b_id": "p10",
+      "result": "0.5-0.5"
+    },
+    {
+      "id": "2bdc",
+      "pairing_id": "760f",
+      "desk_number": 2,
+      "player_a_id": "p2",
+      "player_b_id": "p11",
+      "result": "1-0"
+    },
+    {
+      "id": "d278",
+      "pairing_id": "b0a1",
+      "desk_number": 1,
+      "player_a_id": "p13",
+      "player_b_id": "p7",
+      "result": "0.5-0.5"
+    },
+    {
+      "id": "693e",
+      "pairing_id": "b0a1",
+      "desk_number": 2,
+      "player_a_id": "p14",
+      "player_b_id": "p8",
+      "result": "0.5-0.5"
+    },
+    {
+      "id": "0623",
+      "pairing_id": "b0a1",
+      "desk_number": 3,
+      "player_a_id": "p15",
+      "player_b_id": "p9",
+      "result": "0.5-0.5"
+    },
+    {
+      "id": "571d",
+      "pairing_id": "d714",
+      "desk_number": 1,
+      "player_a_id": "p1",
+      "player_b_id": "p7",
+      "result": "1-0"
+    },
+    {
+      "id": "19f6",
+      "pairing_id": "d714",
+      "desk_number": 2,
+      "player_a_id": "p2",
+      "player_b_id": "p8",
+      "result": "0-1"
+    },
+    {
+      "id": "ae30",
+      "pairing_id": "d714",
+      "desk_number": 3,
+      "player_a_id": "p3",
+      "player_b_id": "p9",
+      "result": "1-0"
+    },
+    {
+      "id": "a8cf",
+      "pairing_id": "5e8a",
+      "desk_number": 1,
+      "player_a_id": "p10",
+      "player_b_id": "p4",
+      "result": "0.5-0.5"
+    },
+    {
+      "id": "6b7d",
+      "pairing_id": "5e8a",
+      "desk_number": 2,
+      "player_a_id": "p11",
+      "player_b_id": "p5",
+      "result": "0.5-0.5"
+    },
+    {
+      "id": "325e",
+      "pairing_id": "5e8a",
+      "desk_number": 3,
+      "player_a_id": "p12",
+      "player_b_id": "p6",
+      "result": "0-1"
+    },
+    {
+      "id": "603f",
+      "pairing_id": "bf2a",
+      "desk_number": 1,
+      "player_a_id": "p1",
+      "player_b_id": "p4",
+      "result": "1-0"
+    },
+    {
+      "id": "4785",
+      "pairing_id": "bf2a",
+      "desk_number": 2,
+      "player_a_id": "p2",
+      "player_b_id": "p5",
+      "result": "1-0"
+    },
+    {
+      "id": "4ff5",
+      "pairing_id": "9e94",
+      "desk_number": 1,
+      "player_a_id": "p10",
+      "player_b_id": "p13",
+      "result": "1-0"
+    },
+    {
+      "id": "846a",
+      "pairing_id": "9e94",
+      "desk_number": 2,
+      "player_a_id": "p11",
+      "player_b_id": "p14",
+      "result": "0.5-0.5"
+    },
+    {
+      "id": "bef5",
+      "pairing_id": "9e94",
+      "desk_number": 3,
+      "player_a_id": "p12",
+      "player_b_id": "p15",
+      "result": "0-1"
+    },
+    {
+      "id": "663f",
+      "pairing_id": "bf2a",
+      "desk_number": 3,
+      "player_a_id": "p3",
+      "player_b_id": "p6",
+      "result": "1-0"
+    },
+    {
+      "id": "9987",
+      "pairing_id": "760f",
+      "desk_number": 3,
+      "player_a_id": "p3",
+      "player_b_id": "p12",
+      "result": "0-1"
+    }
+  ]
+}

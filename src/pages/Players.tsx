@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Target, Plus, Edit, Trash2, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,9 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import {
   Table,
@@ -31,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
+import db from "../../db.json"; // Only for teams
 
 const Players = () => {
   const [open, setOpen] = useState(false);
@@ -40,94 +38,72 @@ const Players = () => {
   const [deskNumber, setDeskNumber] = useState("");
   const [rating, setRating] = useState("1200");
   const [filterTeam, setFilterTeam] = useState<string>("all");
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [players, setPlayers] = useState<any[]>([]);
 
-  const { data: teams } = useQuery({
-    queryKey: ["teams"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("teams").select("*").order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
+  // Load teams from db.json (static)
+  const teams = db.teams;
 
-  const { data: players, isLoading } = useQuery({
-    queryKey: ["players", filterTeam],
-    queryFn: async () => {
-      let query = supabase.from("players").select("*, teams(name, short_code)").order("desk_number");
-      
-      if (filterTeam && filterTeam !== "all") {
-        query = query.eq("team_id", filterTeam);
-      }
-      
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
-  });
+  // Fetch players from json-server
+  useEffect(() => {
+    fetch("http://localhost:3001/players")
+      .then(res => res.json())
+      .then(data => setPlayers(data));
+  }, []);
 
-  const createPlayerMutation = useMutation({
-    mutationFn: async (newPlayer: any) => {
-      const { data, error } = await supabase.from("players").insert([newPlayer]).select();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["players"] });
-      toast({ title: "Player created successfully" });
-      resetForm();
-    },
-    onError: (error: any) => {
-      toast({ title: "Error creating player", description: error.message, variant: "destructive" });
-    },
-  });
+  // Filter players by team if needed
+  const filteredPlayers =
+    filterTeam !== "all"
+      ? players.filter((player) => player.team_id === filterTeam)
+      : players;
 
-  const updatePlayerMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
-      const { data, error } = await supabase.from("players").update(updates).eq("id", id).select();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["players"] });
-      toast({ title: "Player updated successfully" });
-      resetForm();
-    },
-    onError: (error: any) => {
-      toast({ title: "Error updating player", description: error.message, variant: "destructive" });
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-  const deletePlayerMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("players").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["players"] });
-      toast({ title: "Player deleted successfully" });
-    },
-    onError: (error: any) => {
-      toast({ title: "Error deleting player", description: error.message, variant: "destructive" });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const playerData = {
-      full_name: fullName,
-      team_id: teamId,
-      desk_number: parseInt(deskNumber),
-      rating: parseInt(rating),
-    };
-
-    if (editingPlayer) {
-      updatePlayerMutation.mutate({ id: editingPlayer.id, updates: playerData });
-    } else {
-      createPlayerMutation.mutate(playerData);
-    }
+  const newPlayer = {
+    full_name: fullName,
+    team_id: teamId,
+    desk_number: Number(deskNumber),
+    rating: Number(rating)
   };
+
+  
+
+  try {
+    let response;
+    if (editingPlayer) {
+      // Update existing player
+      response = await fetch(`http://localhost:3001/players/${editingPlayer.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newPlayer)
+      });
+    } else {
+      // Create new player
+      response = await fetch("http://localhost:3001/players", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newPlayer)
+      });
+    }
+
+    if (!response.ok) throw new Error("Failed to save player");
+
+    const savedPlayer = await response.json();
+
+    // Update local state so UI reflects new player instantly
+    if (editingPlayer) {
+      setPlayers((prev) =>
+        prev.map((player) => (player.id === savedPlayer.id ? savedPlayer : player))
+      );
+    } else {
+      setPlayers((prev) => [...prev, savedPlayer]);
+    }
+
+    resetForm();
+  } catch (err: any) {
+    alert(err.message);
+  }
+};
 
   const resetForm = () => {
     setFullName("");
@@ -253,9 +229,7 @@ const Players = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {isLoading ? (
-          <div className="text-center py-12 text-muted-foreground">Loading players...</div>
-        ) : players && players.length > 0 ? (
+        {filteredPlayers && filteredPlayers.length > 0 ? (
           <Card className="shadow-elegant">
             <Table>
               <TableHeader>
@@ -270,47 +244,53 @@ const Players = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {players.map((player) => (
-                  <TableRow key={player.id}>
-                    <TableCell className="font-semibold">{player.full_name}</TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <div>{player.teams?.name}</div>
-                        <div className="text-xs text-muted-foreground">{player.teams?.short_code}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-accent/20 text-accent-foreground font-semibold">
-                        {player.desk_number}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-center text-muted-foreground">{player.rating}</TableCell>
-                    <TableCell className="text-center text-sm">
-                      <span className="text-success">{player.wins}</span>-
-                      <span className="text-draw">{player.draws}</span>-
-                      <span className="text-destructive">{player.losses}</span>
-                    </TableCell>
-                    <TableCell className="text-center font-bold">{player.points.toFixed(1)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex gap-1 justify-end">
-                        <Button size="icon" variant="ghost" onClick={() => handleEdit(player)}>
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => {
-                            if (confirm("Are you sure you want to delete this player?")) {
-                              deletePlayerMutation.mutate(player.id);
-                            }
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filteredPlayers.map((player) => {
+                  const team = teams.find((t) => t.id === player.team_id);
+                  return (
+                    <TableRow key={player.id}>
+                      <TableCell className="font-semibold">{player.full_name}</TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <div>{team?.name}</div>
+                          <div className="text-xs text-muted-foreground">{team?.short_code}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-accent/20 text-accent-foreground font-semibold">
+                          {player.desk_number}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center text-muted-foreground">{player.rating}</TableCell>
+                      <TableCell className="text-center text-sm">
+                        <span className="text-success">{player.wins}</span>-
+                        <span className="text-draw">{player.draws}</span>-
+                        <span className="text-destructive">{player.losses}</span>
+                      </TableCell>
+                      <TableCell className="text-center font-bold">{player.points?.toFixed(1) ?? "0.0"}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex gap-1 justify-end">
+                          <Button size="icon" variant="ghost" onClick={() => handleEdit(player)}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={async () => {
+                              if (confirm("Are you sure you want to delete this player?")) {
+                                await fetch(`http://localhost:3001/players/${player.id}`, {
+                                  method: "DELETE",
+                                });
+                                setPlayers((prev) => prev.filter((p) => p.id !== player.id));
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </Card>

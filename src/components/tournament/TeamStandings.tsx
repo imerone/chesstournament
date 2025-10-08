@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Table,
   TableBody,
@@ -14,18 +13,38 @@ const TeamStandings = () => {
   const { data: teams, isLoading } = useQuery({
     queryKey: ["teams-standings"],
     queryFn: async () => {
-      const { data: teamsData, error: teamsError } = await supabase
-        .from("teams")
-        .select("*, players(*)");
-      if (teamsError) throw teamsError;
+      // Fetch teams
+      const teamsRes = await fetch("http://localhost:3001/teams");
+      const teamsData = await teamsRes.json();
 
-      // Calculate team standings
-      const standings = teamsData.map((team) => {
-        const totalPoints = team.players.reduce((sum: number, p: any) => sum + parseFloat(p.points), 0);
-        const totalWins = team.players.reduce((sum: number, p: any) => sum + p.wins, 0);
-        const totalDraws = team.players.reduce((sum: number, p: any) => sum + p.draws, 0);
-        const totalLosses = team.players.reduce((sum: number, p: any) => sum + p.losses, 0);
-        const gamesPlayed = totalWins + totalDraws + totalLosses;
+      // Fetch players
+      const playersRes = await fetch("http://localhost:3001/players");
+      const playersData = await playersRes.json();
+
+      // Fetch pairings
+      const pairingsRes = await fetch("http://localhost:3001/pairings");
+      const pairingsData = await pairingsRes.json();
+
+      // Attach players to their teams
+      const teamsWithPlayers = teamsData.map((team: any) => {
+        const teamPlayers = playersData.filter((p: any) => p.team_id === team.id);
+        return { ...team, players: teamPlayers };
+      });
+
+      // Calculate standings
+      const standings = teamsWithPlayers.map((team: any) => {
+        const totalPoints = team.players.reduce(
+          (sum: number, p: any) => sum + parseFloat(p.points || 0),
+          0
+        );
+        const totalWins = team.players.reduce((sum: number, p: any) => sum + (p.wins || 0), 0);
+        const totalDraws = team.players.reduce((sum: number, p: any) => sum + (p.draws || 0), 0);
+        const totalLosses = team.players.reduce((sum: number, p: any) => sum + (p.losses || 0), 0);
+
+        // FIX: calculate gamesPlayed based on unique pairings (exclude BYEs)
+        const gamesPlayed = pairingsData.filter(
+          (p: any) => !p.is_bye && (p.team_a_id === team.id || p.team_b_id === team.id)
+        ).length;
 
         return {
           ...team,
@@ -37,12 +56,13 @@ const TeamStandings = () => {
         };
       });
 
-      // Sort by points (descending)
-      standings.sort((a, b) => b.totalPoints - a.totalPoints);
+      // Sort by points descending
+      standings.sort((a: any, b: any) => b.totalPoints - a.totalPoints);
 
       return standings;
     },
   });
+
 
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Loading standings...</div>;
@@ -73,7 +93,7 @@ const TeamStandings = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {teams.map((team, index) => (
+          {teams.map((team: any, index: number) => (
             <TableRow key={team.id} className={index === 0 ? "bg-accent/5" : ""}>
               <TableCell className="text-center font-semibold">
                 <div className="flex items-center justify-center gap-1">

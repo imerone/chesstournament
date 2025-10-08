@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Users, Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,9 +12,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -24,78 +21,66 @@ const Teams = () => {
   const [name, setName] = useState("");
   const [shortCode, setShortCode] = useState("");
   const [notes, setNotes] = useState("");
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [teams, setTeams] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { data: teams, isLoading } = useQuery({
-    queryKey: ["teams"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("teams")
-        .select("*, players(id)")
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
+  // Fetch teams from json-server
+  useEffect(() => {
+    fetch("http://localhost:3001/teams")
+      .then(res => res.json())
+      .then(data => {
+        setTeams(data);
+        setLoading(false);
+      });
+  }, []);
 
-  const createTeamMutation = useMutation({
-    mutationFn: async (newTeam: { name: string; short_code: string; notes: string }) => {
-      const { data, error } = await supabase.from("teams").insert([newTeam]).select();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
-      toast({ title: "Team created successfully" });
-      resetForm();
-    },
-    onError: (error: any) => {
-      toast({ title: "Error creating team", description: error.message, variant: "destructive" });
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-  const updateTeamMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
-      const { data, error } = await supabase.from("teams").update(updates).eq("id", id).select();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
-      toast({ title: "Team updated successfully" });
-      resetForm();
-    },
-    onError: (error: any) => {
-      toast({ title: "Error updating team", description: error.message, variant: "destructive" });
-    },
-  });
+  const newTeam = {
+    name,
+    short_code: shortCode,
+    notes,
+    players: editingTeam?.players || []
+  };
 
-  const deleteTeamMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("teams").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
-      toast({ title: "Team deleted successfully" });
-    },
-    onError: (error: any) => {
-      toast({ title: "Error deleting team", description: error.message, variant: "destructive" });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  try {
+    let response;
     if (editingTeam) {
-      updateTeamMutation.mutate({
-        id: editingTeam.id,
-        updates: { name, short_code: shortCode, notes },
+      // Update existing team
+      response = await fetch(`http://localhost:3001/teams/${editingTeam.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newTeam)
       });
     } else {
-      createTeamMutation.mutate({ name, short_code: shortCode, notes });
+      // Create new team
+      response = await fetch("http://localhost:3001/teams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newTeam)
+      });
     }
-  };
+
+    if (!response.ok) throw new Error("Failed to save team");
+
+    const savedTeam = await response.json();
+
+    // Update local state so UI reflects new team instantly
+    if (editingTeam) {
+      setTeams((prev) =>
+        prev.map((team) => (team.id === savedTeam.id ? savedTeam : team))
+      );
+    } else {
+      setTeams((prev) => [...prev, savedTeam]);
+    }
+
+    resetForm();
+  } catch (err: any) {
+    alert(err.message);
+  }
+};
+
 
   const resetForm = () => {
     setName("");
@@ -188,8 +173,8 @@ const Teams = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {isLoading ? (
-          <div className="text-center py-12 text-muted-foreground">Loading teams...</div>
+        {loading ? (
+          <div className="text-center py-12">Loading teams...</div>
         ) : teams && teams.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {teams.map((team) => (
@@ -211,9 +196,12 @@ const Teams = () => {
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() => {
+                        onClick={async () => {
                           if (confirm("Are you sure you want to delete this team?")) {
-                            deleteTeamMutation.mutate(team.id);
+                            await fetch(`http://localhost:3001/teams/${team.id}`, {
+                              method: "DELETE",
+                            });
+                            setTeams((prev) => prev.filter((t) => t.id !== team.id));
                           }
                         }}
                       >
@@ -226,7 +214,7 @@ const Teams = () => {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Players:</span>
-                      <span className="font-semibold">{team.players.length}</span>
+                      <span className="font-semibold">{team.players ? team.players.length : 0}</span>
                     </div>
                     {team.notes && (
                       <p className="text-sm text-muted-foreground pt-2 border-t">{team.notes}</p>
