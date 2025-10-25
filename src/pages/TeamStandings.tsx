@@ -11,10 +11,13 @@ import { Trophy, Medal } from "lucide-react";
 
 /** Safe number coercion */
 const num = (v: any, d = 0) => (typeof v === "number" ? v : v ? Number(v) : d);
-type NumMap = Map<string, number>;
-const inc = (m: NumMap, k: string, v = 1) => m.set(k, num(m.get(k), 0) + v);
 
-// TEAM match scoring (standings points)
+type AnyMap = Map<string, number>;
+
+/** increment helper */
+const inc = (m: AnyMap, k: string, v = 1) => m.set(k, num(m.get(k), 0) + v);
+
+/** constants for TEAM (match) scoring */
 const MATCH_WIN = 1;
 const MATCH_DRAW = 0.5;
 const MATCH_LOSS = 0;
@@ -36,22 +39,26 @@ const TeamStandings = () => {
       const playersData: any[] = await playersRes.json();
       const pairingsData: any[] = await pairingsRes.json();
       const boardsData: any[] = await boardsRes.json();
-      // We’ll recompute matches live to avoid the per-board snapshot issue
-      void resultsRes;
+      const resultsOk = (resultsRes as any)?.ok;
+      const resultsData: any[] = resultsOk ? await resultsRes.json() : [];
+
+      // If tournament_results has a finalized snapshot with *match* points, we could read it,
+      // but since your issue is per-board vs match, we will always recompute match points live
+      // from pairings + boards to ensure correctness.
 
       // Quick lookups
-      const playersMap = new Map(playersData.map((p: any) => [String(p.id), p]));
-      const teamByPlayer = (pid: string) => playersMap.get(String(pid))?.team_id && String(playersMap.get(String(pid))?.team_id);
+      const playersMap = new Map(playersData.map((p: any) => [p.id, p]));
+      const teamByPlayer = (pid: string) => playersMap.get(pid)?.team_id;
 
       // ---- Games played per team (pairings, excluding BYEs) ----
-      const gamesPlayed: NumMap = new Map();
+      const gamesPlayed = new Map<string, number>();
       for (const p of pairingsData) {
         if (p?.is_bye) continue;
         if (p?.team_a_id != null) inc(gamesPlayed, String(p.team_a_id), 1);
         if (p?.team_b_id != null) inc(gamesPlayed, String(p.team_b_id), 1);
       }
 
-      // ---- Tie-break helpers (same as before, applied on board-level) ----
+      // ---- Tie-break helpers based on board-level info (same as before) ----
       const maxDesk = Math.max(1, ...boardsData.map((b: any) => Number(b.desk_number) || 1));
       const DESK_WEIGHT_SCALE = 0.5;
       const BLACK_BONUS = 0.10;
@@ -62,11 +69,13 @@ const TeamStandings = () => {
       };
       const colorMult = (color?: string) => (color === "black" ? 1 + BLACK_BONUS : 1);
 
-      // ---- Group boards by pairing ----
-      const pairingsById = new Map(pairingsData.map((p: any) => [String(p.id), p]));
+      // ---- Build maps we need ----
+      const pairingsById = new Map(pairingsData.map((p: any) => [p.id, p]));
+
+      // Group boards by pairing_id (skip those without a valid pairing/teams)
       const boardsByPairing = new Map<string, any[]>();
       for (const b of boardsData) {
-        const pid = String(b.pairing_id ?? b.match_id ?? b.game_set_id ?? "");
+        const pid = b.pairing_id ?? b.match_id ?? b.game_set_id; // support common field names
         if (!pid) continue;
         const pairing = pairingsById.get(pid);
         if (!pairing) continue;
@@ -77,34 +86,36 @@ const TeamStandings = () => {
         boardsByPairing.set(pid, arr);
       }
 
-      // ---- TEAM-level accumulators ----
-      const matchPoints: NumMap = new Map();   // standings points (W=1/D=0.5/L=0)
-      const matchWins: NumMap   = new Map();
-      const matchDraws: NumMap  = new Map();
-      const matchLosses: NumMap = new Map();
+      // ---- Accumulators (TEAM-level) ----
+      const matchPoints: AnyMap = new Map();    // what we sort by (win=1, draw=0.5, loss=0)
+      const matchWins: AnyMap   = new Map();    // W at MATCH level
+      const matchDraws: AnyMap  = new Map();    // D at MATCH level
+      const matchLosses: AnyMap = new Map();    // L at MATCH level
 
-      // tie-breakers
-      const boardPoints: NumMap = new Map();   // raw sum of board points
-      const tb_desk: NumMap     = new Map();   // desk-weighted board scores
-      const tb_black: NumMap    = new Map();   // color bonus
+      // Secondary tie-break: raw BOARD points (sum of per-board results)
+      const boardPoints: AnyMap = new Map();
 
-      // ---- Compute per match (pairing) ----
+      // Existing tie-breakers you had: desk-weighted and black-color bonuses (sum of board contributions)
+      const tb_desk: AnyMap  = new Map();
+      const tb_black: AnyMap = new Map();
+
+      // ---- Compute per pairing (match) ----
       for (const [pid, boards] of boardsByPairing) {
         const pairing = pairingsById.get(pid);
         if (!pairing) continue;
-
         const ta = String(pairing.team_a_id);
         const tb = String(pairing.team_b_id);
 
+        // Sum BOARD results inside this pairing
         let aBoard = 0;
         let bBoard = 0;
 
         for (const b of boards) {
-          const taBoard = teamByPlayer(String(b.player_a_id));
-          const tbBoard = teamByPlayer(String(b.player_b_id));
-          if (!taBoard || !tbBoard || taBoard === tbBoard) continue;
+          const paTeam = teamByPlayer(b.player_a_id);
+          const pbTeam = teamByPlayer(b.player_b_id);
+          if (!paTeam || !pbTeam || paTeam === pbTeam) continue;
 
-          // board result into raw board points
+          // Board raw points
           if (b.result === "1-0") {
             aBoard += 1;
           } else if (b.result === "0-1") {
@@ -114,7 +125,7 @@ const TeamStandings = () => {
             bBoard += 0.5;
           }
 
-          // tie-break contributions (desk/black)
+          // Update tie-break contributions
           const w = deskWeight(b.desk_number);
           const aColor = (b.player_a_color ?? "white") as string;
           const bColor = (b.player_b_color ?? "black") as string;
@@ -133,11 +144,11 @@ const TeamStandings = () => {
           }
         }
 
-        // accumulate raw board points (tie-break)
+        // Accumulate BOARD points (for tie-break)
         inc(boardPoints, ta, aBoard);
         inc(boardPoints, tb, bBoard);
 
-        // award TEAM match points
+        // Award MATCH points (win=1, draw=0.5, loss=0)
         if (aBoard > bBoard) {
           inc(matchPoints, ta, MATCH_WIN);
           inc(matchWins, ta, 1);
@@ -149,6 +160,7 @@ const TeamStandings = () => {
           inc(matchLosses, ta, 1);
           inc(matchPoints, ta, MATCH_LOSS);
         } else {
+          // draw
           inc(matchPoints, ta, MATCH_DRAW);
           inc(matchPoints, tb, MATCH_DRAW);
           inc(matchDraws, ta, 1);
@@ -162,6 +174,16 @@ const TeamStandings = () => {
         const players = playersData.filter((p: any) => String(p.team_id) === id);
         const playersCount = players.length;
 
+        const totalMatchPoints = num(matchPoints.get(id), 0);
+        const totalBoardPoints = num(boardPoints.get(id), 0);
+
+        const totalWins = num(matchWins.get(id), 0);
+        const totalDraws = num(matchDraws.get(id), 0);
+        const totalLosses = num(matchLosses.get(id), 0);
+
+        const tbd = num(tb_desk.get(id), 0);
+        const tbb = num(tb_black.get(id), 0);
+
         return {
           id: t.id,
           name: t.name,
@@ -169,17 +191,20 @@ const TeamStandings = () => {
           players,
           playersCount,
           gamesPlayed: num(gamesPlayed.get(id), 0),
-          totalWins:   num(matchWins.get(id), 0),       // MATCH W
-          totalDraws:  num(matchDraws.get(id), 0),      // MATCH D
-          totalLosses: num(matchLosses.get(id), 0),     // MATCH L
-          totalPoints: num(matchPoints.get(id), 0),     // MATCH points (standings)
-          boardPoints: num(boardPoints.get(id), 0),     // tie-break #1
-          tb_desk:     num(tb_desk.get(id), 0),         // tie-break #2
-          tb_black:    num(tb_black.get(id), 0),        // tie-break #3
+          // MATCH-level W/D/L:
+          totalWins,
+          totalDraws,
+          totalLosses,
+          // Standings points = MATCH points:
+          totalPoints: totalMatchPoints,
+          // Tie-breakers
+          boardPoints: totalBoardPoints,
+          tb_desk: tbd,
+          tb_black: tbb,
         };
       });
 
-      // Sort: match points → board points → tb_desk → tb_black → match wins → name
+      // Sort by team (match) points → board points → tb_desk → tb_black → match wins → name
       rows.sort(
         (a: any, b: any) =>
           b.totalPoints - a.totalPoints ||
@@ -239,12 +264,14 @@ const TeamStandings = () => {
                   <div className="text-xs text-muted-foreground">{team.short_code}</div>
                 </div>
               </TableCell>
-              <TableCell className="text-center">{team.playersCount ?? team.players?.length ?? 0}</TableCell>
+              <TableCell className="text-center">
+                {team.playersCount ?? team.players?.length ?? 0}
+              </TableCell>
               <TableCell className="text-center">{team.gamesPlayed}</TableCell>
               <TableCell className="text-center text-success">{team.totalWins}</TableCell>
               <TableCell className="text-center text-draw">{team.totalDraws}</TableCell>
               <TableCell className="text-center text-destructive">{team.totalLosses}</TableCell>
-              {/* Очки = TEAM match points (win=1, draw=0.5, loss=0) */}
+              {/* Очки = MATCH points (win=1, draw=0.5) */}
               <TableCell className="text-center font-bold text-lg">
                 {num(team.totalPoints, 0).toFixed(1)}
               </TableCell>
@@ -252,6 +279,7 @@ const TeamStandings = () => {
           ))}
         </TableBody>
       </Table>
+      {/* Optional: if you later want to show Board Points as a note or separate column, you can add it. */}
     </div>
   );
 };

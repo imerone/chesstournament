@@ -19,11 +19,11 @@ const Index = () => {
 
   useEffect(() => {
     Promise.all([
-      fetch("http://localhost:3001/teams").then(res => res.json()),
-      fetch("http://localhost:3001/players").then(res => res.json()),
-      fetch("http://localhost:3001/rounds").then(res => res.json()),
-      fetch("http://localhost:3001/pairings").then(res => res.json()),
-      fetch("http://localhost:3001/board_results").then(res => res.json()),
+      fetch("http://localhost:3001/teams").then((res) => res.json()),
+      fetch("http://localhost:3001/players").then((res) => res.json()),
+      fetch("http://localhost:3001/rounds").then((res) => res.json()),
+      fetch("http://localhost:3001/pairings").then((res) => res.json()),
+      fetch("http://localhost:3001/board_results").then((res) => res.json()),
     ]).then(([teamsData, playersData, roundsData, pairingsData, boardResultsData]) => {
       setTeams(teamsData);
       setPlayers(playersData);
@@ -34,7 +34,14 @@ const Index = () => {
     });
   }, []);
 
-  const currentRound = rounds?.[0];
+  // Pick the first NOT completed round; if all are completed, pick the earliest by number
+  const currentRound = (() => {
+    if (!rounds?.length) return undefined;
+    const asc = [...rounds].sort(
+      (a, b) => Number(a?.round_number || 0) - Number(b?.round_number || 0)
+    );
+    return asc.find((r) => !r?.is_completed) ?? asc[0];
+  })();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
@@ -44,7 +51,11 @@ const Index = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-lg">
-                <img src="https://static.tildacdn.pro/tild6266-3135-4362-a332-306435353066/image-removebg-previ.png" alt="Логотип" className="w-6 h-6" />
+                <img
+                  src="https://static.tildacdn.pro/tild6266-3135-4362-a332-306435353066/image-removebg-previ.png"
+                  alt="Логотип"
+                  className="w-6 h-6"
+                />
               </div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
@@ -53,22 +64,101 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">Профессиональное управление турниром</p>
               </div>
             </div>
-            <nav className="flex gap-2">
-              <Button asChild variant="ghost">
-                <Link to="/teams">Команды</Link>
-              </Button>
-              <Button asChild variant="ghost">
-                <Link to="/players">Игроки</Link>
-              </Button>
-              <Button asChild variant="default">
-                <Link to="/rounds">Туры.</Link>
-              </Button>
-            </nav>
+            <nav className="flex flex-wrap gap-2">
+
+                {/* Командная таблица */}
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors rounded-md px-4 py-2"
+                >
+                  <a
+                    href="/teams_standing"
+                    target="teamsTab"
+                    rel="noopener noreferrer"
+                  >
+                    Таблица Команд
+                  </a>
+                </Button>
+
+                {/* Игроки таблица */}
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors rounded-md px-4 py-2"
+                >
+                  <a
+                    href="/players_standing"
+                    target="playersTab"
+                    rel="noopener noreferrer"
+                  >
+                    Таблица Игроков
+                  </a>
+                </Button>
+
+                {/* Живой тур / текущий раунд */}
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors rounded-md px-4 py-2"
+                >
+                  <a
+                    href="/live_rounds"
+                    target="roundsTab"
+                    rel="noopener noreferrer"
+                  >
+                    Живой Тур
+                  </a>
+                </Button>
+
+                {/* Тренды по доскам */}
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors rounded-md px-4 py-2"
+                >
+                  <a
+                    href="/desk_trends"
+                    target="trendsTab"
+                    rel="noopener noreferrer"
+                  >
+                    Тренды Досок
+                  </a>
+                </Button>
+
+                {/* Your internal SPA routes (no new tab, normal Link) */}
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="px-4 py-2 rounded-md"
+                >
+                  <Link to="/teams">Команды</Link>
+                </Button>
+
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="px-4 py-2 rounded-md"
+                >
+                  <Link to="/players">Игроки</Link>
+                </Button>
+
+                <Button
+                  asChild
+                  variant="default"
+                  className="px-4 py-2 rounded-md"
+                >
+                  <Link to="/rounds">Туры</Link>
+                </Button>
+
+              </nav>
+
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
+
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-3 mb-8">
           <Card className="border-accent/20 shadow-elegant">
@@ -107,9 +197,6 @@ const Index = () => {
           </Card>
         </div>
 
-        {/* Current Round Info */}
-        {currentRound && <CurrentRound roundId={currentRound.id} roundNumber={currentRound.round_number} />}
-
         {/* Standings and Trends */}
         <Card className="shadow-elegant">
           <CardHeader>
@@ -144,4 +231,3 @@ const Index = () => {
 };
 
 export default Index;
-
